@@ -1,0 +1,80 @@
+% parâmetros
+S_min = 7;      % valor mínimo do SF
+S_max = 12;     % valor máximo do SF
+Nc_initial = 100; % número inicial de nós cobertos
+Nc_final = 4000;  % número final de nós cobertos
+lambda = [343.32, 199.75, 112.1, 63.87, 34.33, 18.55];   % taxa de geração de pacotes por unidade de tempo
+BW = 125000;    % largura de banda em Hz para LoRa
+CR = 1;         % taxa de codificação (CR = 4/5 para LoRaWAN)
+H = 0;          % cabeçalho habilitado
+Npream = 8;     % número de símbolos de preâmbulo
+PL = [230, 230, 123, 59, 59, 59]; % PL para diferentes SFs
+b = [50, 75, 100, 125, 150, 175]; % a relação entre SF e número de bits por pacote
+Toa = [0.1048, 0.1802, 0.3211, 0.5636, 1.0485, 1.9398];
+
+num_nodes_range = Nc_initial:100:Nc_final;
+vazao_total = zeros(length(num_nodes_range), 1);
+proporcoes_otimas = zeros(length(num_nodes_range), S_max - S_min + 1);
+
+tic; % Início da medição do tempo de execução
+
+for idx = 1:length(num_nodes_range)
+    Nc = num_nodes_range(idx);
+
+    % Inicializando CVX
+    cvx_begin
+        variable p(S_max - S_min + 1)
+        expression G_s(S_max - S_min + 1)
+        
+        % Cálculo de G_s para diferentes SFs
+        for i = 1:(S_max - S_min + 1)
+            G_s(i) = lambda(i) * Nc * p(i) .* Toa(i);
+        end
+        
+        % Definindo a função objetivo
+        R = sum(log(lambda .* p' * Nc .* b)) - 2 * sum(G_s);
+        maximize(R);
+        
+        % Aplicando as restrições
+        subject to
+            sum(p) == 1 % A soma das proporções = 1
+            p >= 0      
+    cvx_end
+
+    proporcoes_otimas(idx, :) = p'; % Armazena as proporções ótimas
+
+    % Cálculo da vazão (S) após obter as proporções ótimas
+    T = zeros(1, S_max - S_min + 1);
+    for i = 1:(S_max - S_min + 1)
+        T(i) = lambda(i) .* p(i) .* Nc .* b(i) .* exp( -2 * G_s(i)/10000);
+    end
+    
+    % Verificação dos valores de p, G_s e T
+    disp(['Número de Nós: ', num2str(Nc)]);
+    disp(['Proporções (p): ', num2str(p')]);
+    disp(['G_s: ', num2str(G_s')]);
+    disp(['T: ', num2str(T)]);
+    
+    vazao_total(idx) = sum(T);
+end
+
+% Mostrando as proporções ótimas dos nós para cada SF para cada número de nós
+disp('Proporções ótimas dos nós para cada SF:');
+for idx = 1:length(num_nodes_range)
+    fprintf('Número de Nós: %d\n', num_nodes_range(idx));
+    for s = S_min:S_max
+        fprintf('  SF %d: P(s) = %.4f\n', s, proporcoes_otimas(idx, s - S_min + 1));
+    end
+end
+
+% Plotando o gráfico
+figure;
+plot(num_nodes_range, vazao_total, '-o');
+title('Relação entre Vazão e Número de Nós para o cvx');
+xlabel('Número de Nós');
+ylabel('Vazão Total (S)');
+grid on;
+
+toc; % Fim da medição do tempo de execução
+
+save('vazaocvx3.mat','num_nodes_range','vazao_total');

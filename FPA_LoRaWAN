@@ -1,0 +1,150 @@
+function [best, fmin] = vafpa(n, d, iter, p)
+    clc;
+    clear all;
+    close all;
+    tic; % Início da medição do tempo de execução
+    rng('shuffle');
+    if nargin < 1
+        n = 10; % Número de soluções
+        d = 4000; % Número de nós
+        iter = 1000; % Interações
+        p = 0.8; % Taxa de Polarização Global
+    end
+
+    % Parâmetros
+    s_min = 7;
+    s_max = 12;
+    
+    bw = 125000;
+    cr = 1;
+    h = 0;
+    npream = 8;
+    pl = [230, 230, 123, 59, 59, 59];
+    b = [50, 75, 100, 125, 150, 175];
+    toa = [0.1048, 0.1802, 0.3211, 0.5636, 1.0485, 1.9398];
+    lambda_val = [343.32, 199.75, 112.1, 63.87, 34.33, 18.55];
+    num_nodes_range = 100:100:4000; % Faixa de número de nós
+    vazao_total = zeros(length(num_nodes_range), 1);
+    proporcoes_otimas = zeros(length(num_nodes_range), s_max - s_min + 1);
+
+    for idx = 1:length(num_nodes_range)
+        Nc = num_nodes_range(idx);
+        lb = zeros(1, s_max - s_min + 1);
+        ub = ones(1, s_max - s_min + 1);
+        sol = rand(n, s_max - s_min + 1);
+        sol = sol ./ sum(sol, 2); % Normalizar para somar 1
+
+        fitness = arrayfun(@(x) network_utility(sol(x, :), lambda_val, Nc, bw, cr, h, npream, pl, b, toa, s_min), 1:n);
+
+        [fmin, best_idx] = max(fitness);
+        best = sol(best_idx, :);
+        s = sol;
+        
+        % Loop do algoritmo FPA
+        for t = 1:iter
+            for i = 1:n
+                if rand > p
+                    step = levy_flight(s_max - s_min + 1);
+                    ds = step .* (sol(i, :) - best);
+                    s(i, :) = sol(i, :) + ds;
+                    s(i, :) = simple_bounds(s(i, :), lb, ub); % Assegura que s esteja dentro dos limites
+
+                    s(i, :) = s(i, :) ./ sum(s(i, :)); % Normalizar para somar 1
+                else
+                    epsilon = rand;
+                    jk = randperm(n);
+                    s(i, :) = s(i, :) + epsilon * (sol(jk(1), :) - sol(jk(2), :));
+                    s(i, :) = simple_bounds(s(i, :), lb, ub); % Assegura que s esteja dentro dos limites
+                    s(i, :) = s(i, :) ./ sum(s(i, :)); % Normalizar para somar 1
+                end
+
+                fnew = network_utility(s(i, :), lambda_val, Nc, bw, cr, h, npream, pl, b, toa, s_min);
+                if fnew > fitness(i)
+                    sol(i, :) = s(i, :);
+                    fitness(i) = fnew;
+                end
+                if fnew > fmin
+                    best = s(i, :);
+                    fmin = fnew;
+                end
+            end
+        end
+        
+        final_node_proportion = best;
+        proporcoes_otimas(idx, :) = final_node_proportion;
+
+        G = lambda_val * Nc .* final_node_proportion .* toa;
+        T = lambda_val .* final_node_proportion .* Nc .* b .* exp(-2 .* G/10000);
+        vazao_total(idx) = sum(T);
+
+        fprintf('Número de Nós: %d\n', Nc);
+        for sf = s_min:s_max
+            fprintf('  SF %d: P(s) = %.4f\n', sf, final_node_proportion(sf - s_min + 1));
+        end
+    end
+
+    % Plot da relação entre o número de nós e a vazão total
+    figure;
+    plot(num_nodes_range, vazao_total, '-o', 'LineWidth', 2);
+    title('Relação entre Número de Nós e Vazão Total para o FPA');
+    xlabel('Número de Nós');
+    ylabel('Vazão Total');
+    grid on;
+
+    % Mostrar as proporções ótimas dos nós para cada SF
+    for idx = 1:length(num_nodes_range)
+        Nc = num_nodes_range(idx);
+        fprintf('Proporções ótimas para %d nós:\n', Nc);
+        for sf = s_min:s_max
+            fprintf('  SF %d: P(s) = %.4f\n', sf, proporcoes_otimas(idx, sf - s_min + 1));
+        end
+    end
+
+    toc; % Fim da medição do tempo de execução
+
+    vazao_totalfpa = vazao_total;
+    num_nodes_rangefpa = num_nodes_range;
+    save('vazaofpa3.mat', 'num_nodes_rangefpa', 'vazao_totalfpa');
+
+    load("vazaocvx3.mat");
+
+    figure;
+    plot(num_nodes_rangefpa, vazao_totalfpa, 'b-o', 'LineWidth', 2);
+    hold on;
+    plot(num_nodes_range, vazao_total, 'k-o', 'LineWidth', 2);
+    title('Relação entre Número de Nós e Vazão Total para o FPA e CVX');
+    xlabel('Número de Nós Cobertos');
+    ylabel('Vazão Total');
+    legend('Vazão FPA', 'Vazão CVX');
+    grid on;
+end
+
+function step = levy_flight(num_dimensions)
+    beta = 1.5;
+    sigma = (gamma(1 + beta) * sin(pi * beta / 2) / (gamma((1 + beta) / 2) * beta * 2^((beta - 1) / 2)))^(1 / beta);
+    u = randn(1, num_dimensions) * sigma;
+    v = randn(1, num_dimensions);
+    step = u ./ abs(v).^(1 / beta);
+    step = 0.01 * step;  
+end
+
+function s = simple_bounds(s, lb, ub)
+    s = max(min(s, ub), lb);
+end
+
+% Calculando a proporção de nós para cada SF
+function node_proportion = calculate_node_proportion(sol, s_min, s_max)
+    sf_count = zeros(1, s_max - s_min + 1);
+    for i = 1:size(sol, 1)
+        for sf = s_min:s_max
+            sf_count(sf - s_min + 1) = sf_count(sf - s_min + 1) + sum(sol(i, :) == sf);
+        end
+    end
+    total_nodes = sum(sf_count);
+    node_proportion = sf_count / total_nodes;
+end
+
+function z = network_utility(proportions, lambda_val, nc, bw, cr, h, npream, pl, b, toa, s_min)
+    gs = lambda_val .* nc .* toa .* proportions;
+    z = sum(log(lambda_val .* b .* nc .* proportions) - 2 * gs);
+end

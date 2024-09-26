@@ -1,0 +1,119 @@
+%-----------------------------------PARAMETROS----------------------------------------------------------------
+S_min = 7;                                                % valor mínimo do SF
+S_max = 12;                                               % valor máximo do SF
+Nc_initial = 500;                                         % número inicial de nós cobertos
+Nc_final = 4000;                                          % número final de nós cobertos
+lambda = [343.32, 199.75, 112.1, 63.87, 34.33, 18.55]';   % taxa de geração de pacotes por unidade de tempo
+b = 48;                        % a relação entre SF e número de bits por pacote
+Toa = [0.1048, 0.1802, 0.3211, 0.5636, 1.0485, 1.9398]';  % Time on air (seconds)
+Trx1 = [1.1048, 1.1802, 1.3211, 1.5636, 2.0485, 2.9398]';                                                 % janela de recepção 1 (em segundos)
+Trx2 = [2.1048, 2.1802, 2.3211, 2.5636, 3.0485, 3.9398]';                                                 % janela de recepção 2 (em segundos)
+V = 3.3;                                                  % tensão (em Volts)
+I_tx = [24, 25, 25, 32, 44, 44]';                                                % mA corrente no modo de transmissão
+I_rx = 10.5;                                              % mA corrente no modo de recepção
+I_st = 1.4;                                               % mA corrente no modo de espera
+I_id = 0.0015;                                            % mA corrente no modo inativo
+RD1 = 1;                                                  % segundos
+RD2 = 2;                                                  % segundos 
+T = 720;                                                  % segundos
+n_sf = S_max - S_min + 1;
+pesoR = 0.5;
+pesoE = 0.5;
+
+% Números de nós variando de Nc_initial a Nc_final
+Nc_values = Nc_initial:100:Nc_final; % Corrigido para gerar os valores de Nc a cada 100
+vazao_total = zeros(size(Nc_values)); % Vazão total (Throughput)
+energia_total = zeros(size(Nc_values)); % Energia total
+
+% Inicializa as figuras para plotagem
+figure;
+h1 = subplot(2,1,1); % Gráfico para Vazão
+h2 = subplot(2,1,2); % Gráfico para Energia
+
+for idx = 1:length(Nc_values)
+    Nc = Nc_values(idx); % Número de nós atual
+    
+    % -----------------------------------------------------------------------
+    % Maximizar a função utilidade para achar o Rmax e Emin (por SF)
+    cvx_begin 
+        variable p1(n_sf)
+        expression Rmax(n_sf)
+        expression Emin(n_sf)
+        for i = 1:(n_sf)
+         Rmax(i) = (log(lambda(i) .* p1(i) .* Nc .* b)) - 2 * sum(lambda(i) .* Nc .* p1(i) .* Toa(i));
+         Emin(i) = (0.5 .* p1(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + RD1 .* I_st + Trx1(i) .* I_rx) + 0.5 .* p1(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + (RD2 - Trx1(i)) .* I_st + (Trx1(i) + Trx2(i)) .* I_rx) + (0.5 .* p1(i) .* Nc .* V .* (T - Toa(i) + Trx1(i) + RD1 .* I_id) + 0.5 .* p1(i) .* Nc .* V .* (T - (Toa(i) + RD2 + Trx2(i))))); 
+        end
+        maximize(sum(Rmax))
+        subject to
+            sum(p1) == 1; % A soma das proporções = 1
+            p1 >= 0;      
+    cvx_end
+
+    % -----------------------------------------------------------------------
+    % Maximizar a função de energia para achar Rmin e Emax
+    cvx_begin
+        variable p2(n_sf)
+        expression Emax(n_sf)
+        expression Rmin(n_sf)
+        for i = 1:(n_sf)
+            Emax(i) = (0.5 .* p2(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + RD1 .* I_st + Trx1(i) .* I_rx) +...
+            0.5 .* p2(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + (RD2 - Trx1(i)) .* I_st +...
+            (Trx1(i) + Trx2(i)) .* I_rx)) + (0.5 .* p2(i) .* Nc .* V .* (T - Toa(i) + Trx1(i) + ...
+            RD1 .* I_id) +  0.5 .* p2(i) .* Nc .* V .* (T - (Toa(i) + RD2 + Trx2(i))));
+            Rmin(i) = (log(lambda(i) .* p2(i) .* Nc .* b)) - 2 * sum(lambda(i) .* Nc .* p2(i) .* Toa(i));
+        end
+       minimise(sum(Emax))
+       subject to
+           sum(p2) == 1;
+           p2 >= 0;
+           
+    cvx_end    
+
+    % -----------------------------------------------------------------------
+    % Cálculo de alfa e beta
+    alfa = sum(Rmax - Rmin);
+    beta = sum(Emax - Emin);    
+
+    % -----------------------------------------------------------------------
+    % Maximizar a eficiência EFF
+    cvx_begin    
+        variable p(n_sf)
+        expression R(n_sf)
+        expression E(n_sf)
+        for i = 1:(n_sf)
+            R(i) = ((log(lambda(i) .* p(i) * Nc .* b)) - 2 * (lambda(i) .* Nc .* p(i) .* Toa(i)));
+            E(i) =(0.5 .* p(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + RD1 .* I_st + Trx1(i) .* I_rx) + 0.5 .* p(i) .* Nc .* V .* (Toa(i) .* I_tx(i) + (RD2 - Trx1(i)) .* I_st + (Trx1(i) + Trx2(i)) .* I_rx) + (0.5 .* p(i) .* Nc .* V .* (T - Toa(i) + Trx1(i) + RD1 .* I_id) + 0.5 .* p(i) .* Nc .* V .* (T - (Toa(i) + RD2 + Trx2(i)))));
+        end
+        maximize((pesoR/sum(Rmax - Rmin) .* sum(R)) - (pesoE/sum(Emax - Emin) .* sum(E)))
+        subject to
+            sum(p) == 1;
+            p >= 0;
+    cvx_end    
+
+    % -----------------------------------------------------------------------
+    % Cálculo da vazão e da energia para cada SF
+   
+        % Calcular a vazão (Throughput) de maneira alternativa
+        X = lambda .* p .* Nc .* b .* exp(-2 .* lambda .* p .* Nc .* Toa); % Alternativa para simplificar o cálculo da vazão
+        % Calcular a energia (Energy)
+        Y = (0.5 .* p .* Nc .* V .* (Toa .* I_tx + RD1 .* I_st + Trx1 .* I_rx) + 0.5 .* p .* Nc .* V .* (Toa .* I_tx + (RD2 - Trx1) .* I_st + (Trx1 + Trx2) .* I_rx) + (0.5 .* p .* Nc .* V .* (T - Toa + Trx1 + RD1 .* I_id) + 0.5 .* p .* Nc .* V .* (T - (Toa + RD2 + Trx2)))); % Energia   
+    
+vazao_total(idx) = sum(X);
+energia_total(idx) = sum(Y);
+    % Atualizar gráficos em tempo real
+    subplot(h1);
+    plot(Nc_values(1:idx), vazao_total(1:idx), 'b-', 'LineWidth', 2);
+    xlabel('Número de Nós');
+    ylabel('Vazão (Throughput)');
+    title('Relação Vazão vs. Número de Nós');
+    ylim([0 max(vazao_total)*1.1]); % Ajustar o limite de y para garantir visualização
+    drawnow;
+
+    subplot(h2);
+    plot(Nc_values(1:idx), energia_total(1:idx), 'r-', 'LineWidth', 2);
+    xlabel('Número de Nós');
+    ylabel('Energia Consumida (J)');
+    title('Relação Energia vs. Número de Nós');
+    ylim([0 max(energia_total)*1.1]); % Ajustar o limite de y para garantir visualização
+    drawnow;
+end

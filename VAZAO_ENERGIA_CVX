@@ -21,10 +21,11 @@ RD1 = 1;                                                  % segundos
 RD2 = 2;                                                  % segundos 
 T = 720;                                                  % segundos
 n_sf = S_max - S_min + 1;
+
 % Pesos para as combinações lineares
 pesos = [1, 0; 0.75, 0.25; 0.5, 0.5; 0.25, 0.75; 0.1, 0.9];
 labels = {'a=1, b=0', 'a=0.75, b=0.25', 'a=0.5, b=0.5', 'a=0.25, b=0.75', 'a=0.1, b=0.9'};
-colors = {'r-', 'b*', 'g-', 'm-', 'k-'};
+colors = {'r', 'b', 'g', 'm', 'k'};  % Diferenciar por cor
 
 Nc_values = Nc_initial:100:Nc_final; % Corrigido para gerar os valores de Nc a cada 100
 
@@ -32,7 +33,7 @@ Nc_values = Nc_initial:100:Nc_final; % Corrigido para gerar os valores de Nc a c
 X_all = zeros(length(pesos), length(Nc_values));
 Y_all = zeros(length(pesos), length(Nc_values));
 
-figure;
+% Executa os cálculos para todas as combinações
 for p_idx = 1:length(pesos)
     % Define os pesos atuais para R(a) e E(b)
     pesoR = pesos(p_idx, 1);
@@ -62,7 +63,7 @@ for p_idx = 1:length(pesos)
             expression Emax(n_sf)
             Emax = MODELO_DE_ENERGIA(V, I_id, I_st,I_tx,I_rx,Trx1,Trx2,RD1,RD2, p, Nc,T, Toa);
             Rmin = UTILIDADE_DE_REDE(lambda, p, Nc, b, Toa);
-            maximize(sum(Emax))
+            minimize(sum(Emax))
             subject to
                 sum(p) == 1;
                 p >= 0;
@@ -88,35 +89,6 @@ for p_idx = 1:length(pesos)
         %===========Vazão e Energia====================================================================    
         X(idx) = sum(VAZAO(lambda, p, Nc, b, Toa));
         Y(idx) = sum(MODELO_DE_ENERGIA(V, I_id, I_st,I_tx,I_rx,Trx1,Trx2,RD1,RD2, p, Nc,T, Toa));
-
-        % Atualiza gráficos em tempo real
-        subplot(2, 1, 1);
-        hold on;
-        plot(Nc_values(1:idx), X(1:idx), colors{p_idx}, 'LineWidth', 2, 'DisplayName', ['linear comb. ', labels{p_idx}]);
-        xlabel('Número de Nós');
-        ylabel('Vazão (Throughput)');
-        title('Relação Vazão vs. Número de Nós');
-        max_X = max(X_all(:)); % Calcular o máximo de X para definir o limite superior
-        if max_X > 0
-            ylim([0 max_X * 1.1]); % Ajusta o limite superior de y
-        else
-            ylim([0 1]); % Definir um limite padrão quando X for zero
-        end
-
-        subplot(2, 1, 2);
-        hold on;
-        plot(Nc_values(1:idx), Y(1:idx), colors{p_idx}, 'LineWidth', 2, 'DisplayName', ['linear comb. ', labels{p_idx}]);
-        xlabel('Número de Nós');
-        ylabel('Energia Consumida (J)');
-        title('Relação Energia vs. Número de Nós');
-        max_Y = max(Y_all(:)); % Calcular o máximo de Y para definir o limite superior
-        if max_Y > 0
-            ylim([0 max_Y * 1.1]); % Ajusta o limite superior de y
-        else
-            ylim([0 1]); % Definir um limite padrão quando Y for zero
-        end
-
-        drawnow; % Atualiza a visualização em tempo real
     end
     
     % Armazena os valores para todas as combinações
@@ -124,14 +96,37 @@ for p_idx = 1:length(pesos)
     Y_all(p_idx, :) = Y;
 end
 
-% Adiciona legendas às figuras
+% Plotagem dos gráficos para todas as combinações
+figure;
+
+% Vazão vs Número de Nós
 subplot(2, 1, 1);
-legend('show');
+hold on;
+for p_idx = 1:length(pesos)
+    plot(Nc_values, X_all(p_idx, :), 'Color', colors{p_idx}, 'LineWidth', 1.5); % Espessura reduzida
+end
+xlabel('Número de Nós');
+ylabel('Vazão (Throughput)');
+title('Relação Vazão vs. Número de Nós');
+legend(labels);
+hold off;
+
+% Energia vs Número de Nós
 subplot(2, 1, 2);
-legend('show');
+hold on;
+for p_idx = 1:length(pesos)
+    plot(Nc_values, Y_all(p_idx, :), 'Color', colors{p_idx}, 'LineWidth', 1.5); % Espessura reduzida
+end
+xlabel('Número de Nós');
+ylabel('Energia Consumida (J)');
+title('Relação Energia vs. Número de Nós');
+legend(labels);
+hold off;
+
 function G = TRAFEGO_DE_CARGA(lambda, p, Nc, Toa)
     G = lambda .* p .* Nc .* Toa ./10000;
 end
+
 function X = VAZAO(lambda, p, Nc, b, Toa) 
     X = lambda .* p .* Nc .* b .* exp(-2 .* TRAFEGO_DE_CARGA(lambda, p, Nc, Toa));
 end

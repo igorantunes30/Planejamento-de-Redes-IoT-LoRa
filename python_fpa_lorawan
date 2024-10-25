@@ -133,9 +133,11 @@ def flower_pollination_algorithm(fitness_func, num_dimensions, pop_size, max_ite
 
 def utilidade_de_rede(lambda_val, p, Nc, b, Toa):
     val = lambda_val * p * Nc * b
-    if val <= 0:
+    # Verifica se algum elemento de 'val' é menor ou igual a zero
+    if np.any(val <= 0):
         return 0  # Evita log de valores não positivos
     return np.log(val) - 2 * trafego_de_carga(lambda_val, p, Nc, Toa)
+
 
 def levy_flight(num_dimensions):
     beta = 1.5

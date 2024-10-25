@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 
-def fpa_optimization_lora(n=10, d=4000, max_iter=10000, p=0.8):
+# Usar backend compatível com Debian para evitar problemas em servidores sem interface gráfica
+matplotlib.use('Agg')  # Apenas necessário em servidores ou ambientes sem interface gráfica
+
+def fpa_optimization_lora(n=10, d=4000, max_iter=100000, p=0.8):
     S_min = 7
     S_max = 12
     Nc_initial = 500
@@ -32,13 +36,22 @@ def fpa_optimization_lora(n=10, d=4000, max_iter=10000, p=0.8):
         convergencia = []
 
         for Nc in Nc_values:
-            Rmax, Emin = flower_pollination_algorithm(lambda p: np.sum(utilidade_de_rede(lambda_val, p, Nc, b, Toa)), n_sf, n, max_iter, p, convergencia)
-            Emax, Rmin = flower_pollination_algorithm(lambda p: np.sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa)), n_sf, n, max_iter, p, convergencia, mode='minimize')
+            Rmax, Emin = flower_pollination_algorithm(
+                lambda p: np.sum(utilidade_de_rede(lambda_val, p, Nc, b, Toa)),
+                n_sf, n, max_iter, p, convergencia
+            )
+            Emax, Rmin = flower_pollination_algorithm(
+                lambda p: np.sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa)),
+                n_sf, n, max_iter, p, convergencia, mode='minimize'
+            )
 
             alfa = Rmax - Rmin
             beta = Emax - Emin
 
-            best_solution, best_fitness = flower_pollination_algorithm(lambda p: np.sum(eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, T, alfa, beta, pesoR, pesoE)), n_sf, n, max_iter, p, convergencia)
+            best_solution, best_fitness = flower_pollination_algorithm(
+                lambda p: np.sum(eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, T, alfa, beta, pesoR, pesoE)),
+                n_sf, n, max_iter, p, convergencia
+            )
 
             vazao_atual = np.sum(vazao(lambda_val, best_solution, Nc, b, Toa))
             energia_atual = np.sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, best_solution, Nc, T, Toa))
@@ -71,7 +84,8 @@ def fpa_optimization_lora(n=10, d=4000, max_iter=10000, p=0.8):
         plt.legend()
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig('resultado_fpa.png')  # Salva o gráfico em arquivo
+    print("Gráfico salvo como 'resultado_fpa.png'.")
 
 def flower_pollination_algorithm(fitness_func, num_dimensions, pop_size, max_iter, p, convergencia, mode='maximize'):
     population = np.random.rand(pop_size, num_dimensions)
@@ -121,20 +135,26 @@ def vazao(lambda_val, p, Nc, b, Toa):
     return lambda_val * p * Nc * b * np.exp(-2 * trafego_de_carga(lambda_val, p, Nc, Toa))
 
 def modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa):
-    return (0.5 * p * Nc * V * (Toa * I_tx + RD1 * I_st + Trx1 * I_rx) + 0.5 * p * Nc * V * (Toa * I_tx + (RD2 - Trx1) * I_st + (Trx1 + Trx2) * I_rx)) + (0.5 * p * Nc * V * (T - (Toa + Trx1 + RD1)) * I_id + 0.5 * p * Nc * V * (T - (Toa + RD2 + Trx2)) * I_id)
+    return (0.5 * p * Nc * V * (Toa * I_tx + RD1 * I_st + Trx1 * I_rx) + 
+            0.5 * p * Nc * V * (Toa * I_tx + (RD2 - Trx1) * I_st + (Trx1 + Trx2) * I_rx)) + (
+            0.5 * p * Nc * V * (T - (Toa + Trx1 + RD1)) * I_id + 
+            0.5 * p * Nc * V * (T - (Toa + RD2 + Trx2)) * I_id)
 
 def utilidade_de_rede(lambda_val, p, Nc, b, Toa):
     return np.log(lambda_val * p * Nc * b) - 2 * trafego_de_carga(lambda_val, p, Nc, Toa)
 
 def eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, T, alfa, beta, pesoR, pesoE):
-    return (pesoR / alfa * utilidade_de_rede(lambda_val, p, Nc, b, Toa)) - (pesoE / beta * modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa))
+    return (pesoR / alfa * utilidade_de_rede(lambda_val, p, Nc, b, Toa)) - (
+            pesoE / beta * modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa))
 
 def levy_flight(num_dimensions):
     beta = 1.5
-    sigma = (np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
+    sigma = (np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / 
+             (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
     u = np.random.randn(num_dimensions) * sigma
     v = np.random.randn(num_dimensions)
     step = u / np.abs(v) ** (1 / beta)
     return step
 
+# Executa a função principal
 fpa_optimization_lora()

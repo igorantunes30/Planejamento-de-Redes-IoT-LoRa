@@ -1,0 +1,23 @@
+#include <LoRa.h>
+
+void setup() {
+    Serial.begin(9600);
+    while (!Serial);
+
+    if (!LoRa.begin(915E6)) { // Altere para a frequência da sua região
+        Serial.println("Erro ao inicializar LoRa");
+        while (1);
+    }
+    Serial.println("LoRa Gateway inicializado com sucesso");
+}
+
+void loop() {
+    int packetSize = LoRa.parsePacket();
+    if (packetSize) {
+        Serial.print("Pacote recebido de um node: ");
+        while (LoRa.available()) {
+            Serial.print((char)LoRa.read());
+        }
+        Serial.println();
+    }
+}

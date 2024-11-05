@@ -47,4 +47,5 @@ Desenvolver um algoritmo multiobjetivo que selecione a melhor distribuição de 
 Desenvolver a simulação
 Analisar os resultados e comparar com o estado da arte.
 Gerar um relatório final
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

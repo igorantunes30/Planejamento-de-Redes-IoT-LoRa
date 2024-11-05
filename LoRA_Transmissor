@@ -22,3 +22,10 @@ void loop() {
     Serial.println("Pacote enviado");
     delay(5000); // Envia um pacote a cada 5 segundos
 }
+configurações avançadas:
+LoRa.setSpreadingFactor(7); // Valores de 7 a 12
+LoRa.setSignalBandwidth(125E3); // 125E3, 250E3, ou 500E3
+LoRa.setCodingRate4(5); // Valores de 5 a 8
+LoRa.setTxPower(17); // Valores de 2 a 20 dBm
+
+

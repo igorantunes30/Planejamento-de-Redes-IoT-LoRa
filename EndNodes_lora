@@ -1,0 +1,29 @@
+#include <LoRa.h>
+
+const int nodeID = 1;  // ID único para cada end node. Altere para 2, 3, etc., para outros dispositivos
+
+void setup() {
+    Serial.begin(9600);
+    while (!Serial);
+
+    if (!LoRa.begin(915E6)) { // Altere para a frequência da sua região
+        Serial.println("Erro ao inicializar LoRa");
+        while (1);
+    }
+    Serial.println("LoRa inicializado com sucesso");
+}
+
+void loop() {
+    Serial.print("Enviando dados do Node ");
+    Serial.println(nodeID);
+    
+    // Envia o ID do node e uma mensagem ou dado do sensor
+    LoRa.beginPacket();
+    LoRa.print("Node ");
+    LoRa.print(nodeID);
+    LoRa.print(" - Dados: ");
+    LoRa.print(random(0, 100)); // Envia um dado aleatório para teste
+    LoRa.endPacket();
+
+    delay(5000); // Envia dados a cada 5 segundos. Ajuste conforme necessário
+}

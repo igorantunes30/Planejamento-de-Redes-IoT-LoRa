@@ -47,5 +47,47 @@ Desenvolver um algoritmo multiobjetivo que selecione a melhor distribuição de 
 Desenvolver a simulação
 Analisar os resultados e comparar com o estado da arte.
 Gerar um relatório final
------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Simulações de Redes LpWANs com Protocolo LoRaWAN
+Este trabalho visa otimizar a redes LpWAns que usam o protocolo LoRaWAN com intuito de maximizar a vazão de dados desse tipo de rede diminuindo o consumo energético.
+Para isso testes com dispositivos reais serão feitos de maneira que os parâmetros configuráveis
+O protocolo LoRaWAN permite configurar diversos parâmetros para ajustar o desempenho e a eficiência da rede, especialmente em relação à cobertura, consumo de energia e taxa de transmissão. Aqui estão alguns dos principais parâmetros configuráveis:
+
+1. Fator de Espalhamento (Spreading Factor - SF)
+Descrição: Controla a relação entre a taxa de dados e a sensibilidade do receptor. Valores mais altos de SF aumentam o alcance do sinal, mas diminuem a taxa de transmissão e aumentam o tempo no ar (ToA) da mensagem, consumindo mais energia.
+Intervalo: SF7 a SF12 (para a maioria dos casos).
+Aplicação: Dispositivos mais distantes geralmente usam SF mais altos para melhorar a sensibilidade.
+2. Taxa de Códigos de Correção de Erros (Coding Rate - CR)
+Descrição: Determina a proporção de dados de correção de erros adicionados ao pacote. Um valor de CR mais alto aumenta a confiabilidade da comunicação, mas reduz a taxa de dados.
+Intervalo: 4/5, 4/6, 4/7 ou 4/8.
+Aplicação: CR mais altos são úteis em ambientes com muita interferência ou em áreas com alta perda de pacotes.
+3. Largura de Banda (Bandwidth - BW)
+Descrição: A largura de banda influencia a velocidade da comunicação e a capacidade de penetração do sinal. Larguras de banda maiores permitem taxas de dados mais rápidas, mas consomem mais energia e têm menor sensibilidade.
+Valores comuns: 125 kHz, 250 kHz ou 500 kHz.
+Aplicação: BW de 125 kHz é usado para maximizar a cobertura em aplicações de longo alcance, enquanto 500 kHz pode ser usado para transmissões rápidas.
+4. Nível de Potência de Transmissão (Transmit Power)
+Descrição: Define a potência com que o dispositivo transmite, influenciando a cobertura e o consumo de energia.
+Intervalo: De 2 dBm a 20 dBm (dependendo das regulamentações locais).
+Aplicação: Potências mais altas são úteis para alcançar dispositivos em locais distantes, mas aumentam o consumo de energia.
+5. Intervalo de Transmissão (Duty Cycle)
+Descrição: Restringe o tempo de uso do canal para evitar congestionamento e respeitar regulamentações de uso do espectro. Isso afeta o intervalo entre as transmissões e limita a quantidade de dados que podem ser enviados em um determinado tempo.
+Intervalo: Depende das regulamentações da região, mas geralmente é em torno de 1% para frequências não licenciadas.
+Aplicação: Útil para economizar energia e evitar interferência com outros dispositivos no mesmo espectro.
+6. Classe de Dispositivo (A, B ou C)
+Descrição: LoRaWAN suporta três classes de dispositivos, que variam em termos de latência e consumo de energia:
+Classe A: Dispositivos enviam dados e só podem receber mensagens em duas janelas de downlink após uma transmissão uplink. É a classe mais eficiente em termos de energia.
+Classe B: Dispositivos têm janelas de downlink sincronizadas em intervalos regulares.
+Classe C: Dispositivos têm a janela de downlink aberta quase continuamente, consumindo mais energia, mas proporcionando a menor latência.
+Aplicação: Escolher a classe adequada depende do requisito de latência da aplicação e da duração da bateria.
+7. Parâmetros de Canal de Frequência
+Descrição: Configura os canais de frequência de operação para evitar interferências e melhorar a confiabilidade.
+Intervalo: Varia com as bandas regionais (ISM) regulamentadas, como 868 MHz (Europa) e 915 MHz (América do Norte).
+Aplicação: Configurar múltiplos canais aumenta a capacidade de dispositivos e reduz a colisão de dados.
+8. Número Máximo de Retransmissões (Retries)
+Descrição: Define quantas vezes uma mensagem deve ser retransmitida em caso de falha no envio, o que pode aumentar a confiabilidade da comunicação.
+Aplicação: Útil em áreas com interferência ou com baixa qualidade de sinal, onde uma retransmissão aumenta a probabilidade de entrega bem-sucedida.
+9. Ativação (OTAA vs ABP)
+Descrição: Define como os dispositivos são ativados e se conectam à rede:
+OTAA (Over-The-Air Activation): A ativação é realizada através de uma troca de chaves de segurança e exige que o dispositivo suporte uma sequência de mensagens.
+ABP (Activation By Personalization): Os parâmetros de segurança são predefinidos, permitindo uma conexão mais rápida.
+Aplicação: OTAA é geralmente preferida pela segurança adicional, enquanto ABP pode ser útil para dispositivos fixos e ambientes de teste.
 

@@ -1,0 +1,24 @@
+#include <LoRa.h>
+
+void setup() {
+    Serial.begin(9600);
+    while (!Serial);
+
+    // Inicializa o módulo LoRa
+    if (!LoRa.begin(915E6)) { // Altere para a frequência do seu país: 915E6, 868E6, ou 433E6
+        Serial.println("Erro ao inicializar LoRa");
+        while (1);
+    }
+    Serial.println("LoRa inicializado com sucesso");
+}
+
+void loop() {
+    Serial.println("Enviando pacote...");
+    // Inicia o pacote LoRa
+    LoRa.beginPacket();
+    LoRa.print("Olá, este é um teste de transmissão LoRa!");
+    LoRa.endPacket();
+
+    Serial.println("Pacote enviado");
+    delay(5000); // Envia um pacote a cada 5 segundos
+}

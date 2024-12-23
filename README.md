@@ -123,3 +123,29 @@ Fator de Espalhamento (SF): Ajusta a sensibilidade e a taxa de dados.
 Em ambientes reais, considere fatores como obstáculos físicos, interferências de outras frequências, e condições atmosféricas, que podem afetar o alcance.
 Utilize um multímetro para monitorar o consumo de energia se o projeto requer otimização de bateria.
 Essas instruções devem cobrir o básico e permitir que você faça testes de comunicação LoRa entre dispositivos Arduino. Se precisar de mais detalhes sobre algum parâmetro ou teste específico, estou à disposição!
+# Referencias1
+Lima, Wirlan G., et al. "LoRa Technology Propagation Models for IoT Network Planning in the Amazon Regions." Sensors 24.5 (2024): 1621.
+Sardinha, Francisco José Correia. Recolha de Dados Meteorológicos Utilizando LoRa. MS thesis. Universidade da Madeira (Portugal), 2023.
+Souza Mayrink, Marco Antônio. "Uma nova abordagem da recomendação ITU-R P. 1546 para a predição de cobertura em enlaces curtos sobre terrenos mistos." (2005).
+Korde, Mridula, Jagdish Kene, and Minal Ghute. "Analysis of path loss of wireless channel with hata model." International Conference on Smart Trends in Computing and Communications. Singapore: Springer Nature Singapore, 2023.
+Singh, Y. (2012). Comparison of okumura, hata and cost-231 models on the basis of path loss and signal strength. International journal of computer applications, 59(11).
+Gallego-Madrid, J., Molina-Zarca, A., Sanchez-Iborra, R., Bernal-Bernabe, J., Santa, J., Ruiz, P. M., & Skarmeta-Gómez, A. F. (2020). Enhancing extensive and remote lora deployments through mec-powered drone gateways. Sensors, 20(15), 4109.
+Saraereh, O. A., Alsaraira, A., Khan, I., & Uthansakul, P. (2020). Performance evaluation of UAV-enabled LoRa networks for disaster management applications. Sensors, 20(8), 2396.
+Loubany, A., Lahoud, S., Samhat, A. E., & El Helou, M. (2023). Joint throughput-energy optimization in multi-gateway LoRaWAN networks. Telecommunication Systems, 84(2), 271-283.
+Software Matlab para programação convexa disciplinada, versão 2.0 beta. 2013, disponível em: https://cvxr.com/cvx (acessado em: 20/03/2024).
+Faisal, M. (2020). Review of flower pollination algorithm: Applications and variants. In IEEE.
+Optimising performances of LoRa based IoT enabled wireless sensor network for smart agriculture
+LoRa indoor coverage and performance in an industrial environment: Case study
+Santos, L. C. R. (2023). Estudo e Análise do Uso de IoT para Criar uma Rede de Comunicação nos Rios da Amazônia. Master's Dissertation, Instituto de Ciências Matemáticas e de Computação, University of São Paulo, São Carlos. Retrieved 2024-08-08.
+Loubany, Ali, Samer Lahoud, and Rida El Chall. "Adaptive algorithm for spreading factor selection in LoRaWAN networks with multiple gateways." Computer Networks 182 (2020): 107491.
+Zanella, Andrea, et al. "Internet of things for smart cities." IEEE Internet of Things journal 1.1 (2014): 22-32.
+Reynders, Brecht, Wannes Meert, and Sofie Pollin. "Power and spreading factor control in low power wide area networks." 2017 IEEE International Conference on Communications (ICC). IEEE, 2017.
+Abdel-Basset, Mohamed e Laila A. Shawky. "Algoritmo de polinização de flores: uma revisão abrangente." Revisão de Inteligência Artificial 52 (2019): 2533-2557.
+# Referencias2
+Anzum R, Habaebi MH, Islam MR, Hakim GPN, Khandaker MU, Osman H, Alamri S, AbdElrahim E. A Multiwall Path-Loss Prediction Model Using 433 MHz LoRa-WAN Frequency to Characterize Foliage’s Influence in a Malaysian Palm Oil Plantation Environment. Sensors. 2022; 22(14):5397. https://doi.org/10.3390/s22145397
+S. Hosseinzadeh, H. Larijani, K. Curtis, A. Wixted and A. Amini, "Empirical propagation performance evaluation of LoRa for indoor environment," 2017 IEEE 15th International Conference on Industrial Informatics (INDIN), Emden, Germany, 2017, pp. 26-31, doi: 10.1109/INDIN.2017.8104741.
+R. Muppala, A. Navnit, S. Poondla and A. M. Hussain, "Investigation of Indoor LoRaWAN Signal Propagation for Real-World Applications," 2021 6th International Conference for Convergence in Technology (I2CT), Maharashtra, India, 2021, pp. 1-5, doi: 10.1109/I2CT51068.2021.9418173.
+Azevedo JA, Mendonça F. A Critical Review of the Propagation Models Employed in LoRa Systems. Sensors. 2024; 24(12):3877. https://doi.org/10.3390/s24123877
+S. Bertoldo, M. Paredes, L. Carosso, M. Allegretti and P. Savi, "Empirical indoor propagation models for LoRa radio link in an office environment," 2019 13th European Conference on Antennas and Propagation (EuCAP), Krakow, Poland, 2019, pp. 1-5.
+R. Ballestrin, J. F. Feijó, M. Feldman and I. Müller, "Exploring Machine Learning Techniques for Path Loss Prediction in LoRa Networks," 2024 19th International Symposium on Wireless Communication Systems (ISWCS), Rio de Janeiro, Brazil, 2024, pp. 1-6, doi: 10.1109/ISWCS61526.2024.10639055.
+S. Lavdas, L. Zacharioudakis, A. Khalifeh and Z. Zinonos, "The Effect of Temperature and Humidity on Indoor LoRa Propagation Model," 2021 17th International Conference on Distributed Computing in Sensor Systems (DCOSS), Pafos, Cyprus, 2021, pp. 374-379, doi: 10.1109/DCOSS52077.2021.00066.

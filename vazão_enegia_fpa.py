@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 def fpa_optimization_lora(n=10, d=40, max_iter=10000, p=0.8):
     S_min = 7
@@ -133,7 +134,7 @@ def eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2,
 
 def levy_flight(num_dimensions):
     beta = 1.5
-    sigma = (np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
+    sigma = (math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / (math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
     u = np.random.randn(num_dimensions) * sigma
     v = np.random.randn(num_dimensions)
     step = u / np.abs(v) ** (1 / beta)

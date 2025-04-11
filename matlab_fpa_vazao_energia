@@ -1,7 +1,7 @@
 function fpa_optimization_lora()
     % Parâmetros principais
     n = 100; % Tamanho da população
-    max_iter = 70; % Iterações máximas
+    max_iter = 100; % Iterações máximas
     p = 0.8; % Probabilidade de polinização global
     S_min = 7;
     S_max = 12;
@@ -65,8 +65,8 @@ function fpa_optimization_lora()
                 S_max - S_min + 1, n, max_iter, p, 'maximize');
             Rmin = utilidade_de_rede(lambda_val, p, Nc, b, Toa);
 
-            alfa = Rmax - Rmin; % Normalizador para vazão
-            beta = Emin - Emax; % Normalizador para energia
+            alfa = sum(Rmax - Rmin); % Normalizador para vazão
+            beta = sum(Emin - Emax); % Normalizador para energia
 
             % Otimização conjunta
             [best_solution, convergencia] = flower_pollination_algorithm( ...

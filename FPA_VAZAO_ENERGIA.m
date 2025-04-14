@@ -125,5 +125,12 @@ end
 function Gs = trafego_de_carga(lambda_val, p, Nc, Toa)
     Gs = lambda_val .* p .* Nc .* Toa ./ 10000;
 end
-
+function step = levy_flight(num_dimensions)
+    beta = 1.5;
+    sigma = (gamma(1 + beta) * sin(pi * beta / 2) / ...
+            (gamma((1 + beta) / 2) * beta * 2^((beta - 1) / 2)))^(1 / beta);
+    u = randn(1, num_dimensions) * sigma;
+    v = randn(1, num_dimensions);
+    step = u ./ abs(v).^(1 / beta);
+end
 

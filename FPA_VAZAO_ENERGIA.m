@@ -1,12 +1,12 @@
-function [X_all, Y_all] = fpa_optimization_lora(pesoR, pesoE, Nc_values)
+function fpa_optimization_lora()
     % Parâmetros principais
     n = 100; % Tamanho da população
     max_iter = 200; % Iterações máximas
     p = 0.8; % Probabilidade de polinização global
     S_min = 7;
     S_max = 12;
-    Nc_initial = 100;
-    Nc_final = 1000;
+    Nc_initial =500;
+    Nc_final = 4000;
     step_Nc = 100; % Incremento no número de nós
     lambda_val = 6;
     b = 48;
@@ -15,43 +15,98 @@ function [X_all, Y_all] = fpa_optimization_lora(pesoR, pesoE, Nc_values)
     Trx2 = [2.1048, 2.1802, 2.3211, 2.5636, 3.0485, 3.9398];
     V = 3.3; I_tx = 44; I_rx = 10.5; I_st = 1.4; I_id = 0.0015;
     RD1 = 1; RD2 = 2; T = 720;
-  
+    pesos = [1, 0; 0.75, 0.25; 0.5, 0.5; 0.25, 0.75; 0.1, 0.9];
+    Nc_values = Nc_initial:step_Nc:Nc_final;
 
-    % Inicializa os dados para cada combinação de peso
-    X_all = zeros(1, length(Nc_values)); % Vazão (Throughput)
-    Y_all = zeros(1, length(Nc_values)); % Energia
+    % Inicialização de gráficos
+    figure;
+    sgtitle('Otimização com FPA em Redes LoRa');
 
-    % Executa a otimização para os diferentes valores de Nc
-    for Nc_idx = 1:length(Nc_values)
-        Nc = Nc_values(Nc_idx);
+    subplot(3, 1, 1); % Gráfico de vazão
+    hold on;
+    title('Relação entre Número de Nós e Vazão Total');
+    xlabel('Número de Nós');
+    ylabel('Vazão Total (Bps)');
+    grid on;
 
-        % Otimização de vazão máxima e energia mínima
-        [Rmax, ~] = flower_pollination_algorithm( ...
-            @(p) sum(utilidade_de_rede(lambda_val, p, Nc, b, Toa)), ...
-            S_max - S_min + 1, n, max_iter, p, 'maximize');
-        Emin = modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa);
+    subplot(3, 1, 2); % Gráfico de energia
+    hold on;
+    title('Relação entre Número de Nós e Energia Total');
+    xlabel('Número de Nós');
+    ylabel('Energia Total (J)');
+    grid on;
 
-        [Emax, ~] = flower_pollination_algorithm( ...
-            @(p) sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa)), ...
-            S_max - S_min + 1, n, max_iter, p, 'maximize');
-        Rmin = utilidade_de_rede(lambda_val, p, Nc, b, Toa);
+    subplot(3, 1, 3); % Gráfico de convergência
+    hold on;
+    title('Convergência do FPA para diferentes distribuições de pesos');
+    xlabel('Iterações');
+    ylabel('Fitness');
+    grid on;
 
-        alfa = sum(Rmax - Rmin); % Normalizador para vazão
-        beta = sum(Emin - Emax); % Normalizador para energia
+    for peso_idx = 1:size(pesos, 1)
+        pesoR = pesos(peso_idx, 1);
+        pesoE = pesos(peso_idx, 2);
 
-        % Otimização conjunta
-        [best_solution, ~] = flower_pollination_algorithm( ...
-            @(p) sum(eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, T, alfa, beta, pesoR, pesoE)), ...
-            S_max - S_min + 1, n, max_iter, p, 'maximize');
+        vazao_total = [];
+        energia_total = [];
+        convergencia_media = zeros(max_iter, 1); % Para média das convergências
 
-        % Calculando a vazão e energia para a solução otimizada
-        vazao_atual = sum(vazao(lambda_val, best_solution, Nc, b, Toa));
-        energia_atual = sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, best_solution, Nc, T, Toa));
+        for Nc_idx = 1:length(Nc_values)
+            Nc = Nc_values(Nc_idx);
 
-        % Armazenando os resultados
-        X_all(Nc_idx) = vazao_atual;
-        Y_all(Nc_idx) = energia_atual;
+            % Otimização de vazão máxima e energia mínima
+            [Rmax, ~] = flower_pollination_algorithm( ...
+                @(p) sum(utilidade_de_rede(lambda_val, p, Nc, b, Toa)), ...
+                S_max - S_min + 1, n, max_iter, p, 'maximize');
+            Emin = modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa);
+
+            [Emax, ~] = flower_pollination_algorithm( ...
+                @(p) sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, p, Nc, T, Toa)), ...
+                S_max - S_min + 1, n, max_iter, p, 'maximize');
+            Rmin = utilidade_de_rede(lambda_val, p, Nc, b, Toa);
+
+            alfa = sum(Rmax - Rmin); % Normalizador para vazão
+            beta = sum(Emin - Emax); % Normalizador para energia
+
+            % Otimização conjunta
+            [best_solution, convergencia] = flower_pollination_algorithm( ...
+                @(p) sum(eficiencia(lambda_val, p, Nc, b, Toa, V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, T, alfa, beta, pesoR, pesoE)), ...
+                S_max - S_min + 1, n, max_iter, p, 'maximize');
+
+            vazao_atual = sum(vazao(lambda_val, best_solution, Nc, b, Toa));
+            energia_atual = sum(modelo_de_energia(V, I_id, I_st, I_tx, I_rx, Trx1, Trx2, RD1, RD2, best_solution, Nc, T, Toa));
+
+            vazao_total = [vazao_total, vazao_atual];
+            energia_total = [energia_total, energia_atual];
+
+            convergencia_media = convergencia_media + convergencia(:); % Soma as convergências
+        end
+
+        % Média das convergências para este peso
+        convergencia_media = convergencia_media / length(Nc_values);
+
+        % Plotar Vazão Total
+        subplot(3, 1, 1);
+        plot(Nc_values, vazao_total, '-o', 'DisplayName', sprintf('Peso (%.2f, %.2f)', pesoR, pesoE));
+
+        % Plotar Energia Total
+        subplot(3, 1, 2);
+        plot(Nc_values, energia_total, '-o', 'DisplayName', sprintf('Peso (%.2f, %.2f)', pesoR, pesoE));
+
+        % Plotar Convergência Média
+        subplot(3, 1, 3);
+        plot(1:max_iter, convergencia_media, '-o', 'DisplayName', sprintf('Peso (%.2f, %.2f)', pesoR, pesoE));
     end
+
+    % Adicionar legendas aos gráficos
+    subplot(3, 1, 1);
+    legend;
+
+    subplot(3, 1, 2);
+    legend;
+
+    subplot(3, 1, 3);
+    legend;
 end
 
 % Funções Auxiliares 
@@ -125,6 +180,7 @@ end
 function Gs = trafego_de_carga(lambda_val, p, Nc, Toa)
     Gs = lambda_val .* p .* Nc .* Toa ./ 10000;
 end
+
 function step = levy_flight(num_dimensions)
     beta = 1.5;
     sigma = (gamma(1 + beta) * sin(pi * beta / 2) / ...
@@ -133,4 +189,6 @@ function step = levy_flight(num_dimensions)
     v = randn(1, num_dimensions);
     step = u ./ abs(v).^(1 / beta);
 end
+
+
 
